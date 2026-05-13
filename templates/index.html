@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ app_name }}</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div>
+        <h1>{{ app_name }}</h1>
+        <p>多 Agent 协同运营自动化 MVP</p>
+      </div>
+      <div class="badge {% if has_openai %}green{% else %}gray{% endif %}">
+        {% if has_openai %}OpenAI Mode{% else %}Mock Mode{% endif %}
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>运行工作流</h2>
+      <form id="workflow-form">
+        <label>主题</label>
+        <input name="topic" value="新品上线推广" placeholder="输入一个运营主题" />
+        <label>受众</label>
+        <input name="audience" value="独立开发者" placeholder="例如：学生 / 创业者 / 开发者" />
+        <label>目标</label>
+        <input name="goal" value="提升预约转化" placeholder="例如：提升留资 / 增加曝光" />
+        <button type="submit">执行多 Agent 工作流</button>
+      </form>
+      <pre id="result" class="result">等待执行...</pre>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>最近任务</h2>
+        <div class="task-list">
+          {% for task in tasks %}
+          <div class="task-item">
+            <strong>#{{ task.id }}</strong>
+            <span>{{ task.topic }}</span>
+            <small>{{ task.status }} · {{ task.created_at }}</small>
+          </div>
+          {% else %}
+          <p>暂无任务</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>接口</h2>
+        <p><code>POST /api/run</code></p>
+        <p><code>GET /api/tasks</code></p>
+        <p><code>GET /api/tasks/{task_id}</code></p>
+        <p><code>GET /health</code></p>
+      </div>
+    </section>
+  </div>
+
+<script>
+const form = document.getElementById("workflow-form");
+const result = document.getElementById("result");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  result.textContent = "执行中...";
+  const formData = new FormData(form);
+  const payload = Object.fromEntries(formData.entries());
+
+  const resp = await fetch("/api/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await resp.json();
+  result.textContent = JSON.stringify(data, null, 2);
+});
+</script>
+</body>
+</html>
